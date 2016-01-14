@@ -43,6 +43,7 @@ if ( typeof module !== 'undefined' && module.exports ) module.exports = function
         _onload = cb;
       }
     });
+    self.postMessage({ type: 'create', id: that._id, tag: 'img' });
     self.register(this._tag, 'onload', _onload);
   }
 
@@ -81,7 +82,12 @@ if ( typeof module !== 'undefined' && module.exports ) module.exports = function
           }
         }
       }
-      self.postMessage({ type: 'call', method: fnName, args: arguments, from: this.id, tag: 'canvas', attrs: attrs });
+      var message = { type: 'call', method: fnName, args: arguments, from: this.id, tag: 'canvas', attrs: attrs }
+      if (arguments.args) {
+        message.id = arguments.id;
+        message.args = arguments.args;
+      }
+      self.postMessage(message);
     }
   }
 

@@ -1,12 +1,14 @@
-if ( typeof module !== 'undefined' && module.exports ) module.exports = function() {
+if ( typeof module !== 'undefined' && module.exports ) module.exports = function GhostCanvas() {
   // register document on web worker
   var inWorker = self.document === undefined
-  if (!self.document) self.document = {
+  var post = self.post || self.postMessage
+  if (!self.document) self.document = self.window = {
     createElement: function(tagName) {
       if (tagName === 'canvas') return new GhostCanvas();
       else if (tagName === 'image') return new GhostImage();
     }
   };
+  self.CanvasRenderingContext2D = GhostCanvasContext;
 
   // event handlers
   var handlers = {}, globalCounter = 0;
@@ -25,14 +27,14 @@ if ( typeof module !== 'undefined' && module.exports ) module.exports = function
       get: function() { return _crossOrigin; },
       set: function(value) {
         _crossOrigin = value
-        self.postMessage({ type: 'set', id: that._id, tag: 'img', key: 'crossOrigin', value: _src });
+        post({ type: 'set', id: that._id, tag: 'img', key: 'crossOrigin', value: _src });
       }
     });
     Object.defineProperty(this, 'src', {
       get: function() { return _src; },
       set: function(value) {
         _src = value;
-        self.postMessage({ type: 'set', id: that._id, tag: 'img', key: 'src', value: _src });
+        post({ type: 'set', id: that._id, tag: 'img', key: 'src', value: _src });
       }
     });
     Object.defineProperty(this, 'onload', {
@@ -43,7 +45,7 @@ if ( typeof module !== 'undefined' && module.exports ) module.exports = function
         _onload = cb;
       }
     });
-    self.postMessage({ type: 'create', id: that._id, tag: 'img' });
+    post({ type: 'create', id: that._id, tag: 'img' });
     self.register(this._tag, 'onload', _onload);
   }
 
@@ -62,6 +64,9 @@ if ( typeof module !== 'undefined' && module.exports ) module.exports = function
     this.width = 0;
     this.height = 0;
     this.id = null;
+    this.childNodes = [];
+    this._operationCount = 0;
+    this._queue = [];
   }
 
   GhostCanvas.prototype.getContext = function(key) {
@@ -71,23 +76,32 @@ if ( typeof module !== 'undefined' && module.exports ) module.exports = function
     } else throw new Error('Only 2d context is supported');
   }
 
-  GhostCanvas.prototype.caller = function(fnName, arguments) {
+  GhostCanvas.prototype.caller = function(fnName, args) {
     if (inWorker) {
-      var attrs = {}
-      for (var key in this) {
-        if (this.hasOwnProperty(key) && key[0] !== '_' && key !== 'canvas') {
-          if (this._lastTimeProps[key] !== this[key]) {
-            attrs[key] = (this[key] instanceof GhostCanvasFill ? { id: this[key].id } : this[key]);
-            this._lastTimeProps = attrs[key];
+      var attrs = {}, ctx = this.context
+      for (var key in ctx) {
+        if (ctx.hasOwnProperty(key) && key[0] !== '_' && key !== 'canvas') {
+          if (ctx._lastTimeProps[key] !== ctx[key]) {
+            attrs[key] = (ctx[key] instanceof GhostCanvasFill ? { id: ctx[key].id } : ctx[key]);
+            ctx._lastTimeProps[key] = attrs[key];
           }
         }
       }
-      var message = { type: 'call', method: fnName, args: arguments, from: this.id, tag: 'canvas', attrs: attrs }
-      if (arguments.args) {
-        message.id = arguments.id;
-        message.args = arguments.args;
+      var message = { type: 'call', method: fnName, args: args, from: this.id, tag: 'canvas', attrs: attrs }
+      if (args.args) {
+        message.id = args.id;
+        message.args = args.args;
       }
-      self.postMessage(message);
+      message.args = Array.prototype.slice.call(message.args);
+      // this._queue.push(message);
+      // this._operationCount++;
+      // if (this._operationCount < 10) return
+      // else {
+      //   self.post(this._queue);
+      //   this._operationCount = 0;
+      //   this._queue = [];
+      // }
+      self.post(message)
     }
   }
 
@@ -228,9 +242,11 @@ if ( typeof module !== 'undefined' && module.exports ) module.exports = function
   };
 
   ['createLinearGradient', 'createRadialGradient'].forEach(function(key) {
-    var result = new GhostCanvasFill();
-    this.canvas.caller(key, { args: arguments, id: result._id });
-    return result;
+    GhostCanvasContext.prototype[key] = function() {
+      var result = new GhostCanvasFill();
+      this.canvas.caller(key, { args: arguments, id: result._id });
+      return result;
+    };
   });
 
   GhostCanvasContext.prototype.save = function() {
@@ -253,6 +269,8 @@ if ( typeof module !== 'undefined' && module.exports ) module.exports = function
   };
 
   ['drawFocusIfNeeded', 'measureText', 'isPointInPath', 'isPointInStroke'].forEach(function(key) {
-    console.warn('The method', key, 'is not supported.');
+    GhostCanvasContext.prototype[key] = function() {
+      console.warn('The method', key, 'is not supported.');
+    };
   });
 }

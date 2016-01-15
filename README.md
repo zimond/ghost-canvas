@@ -1,4 +1,4 @@
-# ghost-cavas
+# ghost-canvas
 
 NOTE: This project is only for personal use now. It's in early stage and not tested,
 use with your own risk.
@@ -17,9 +17,9 @@ Canvas painting usually involves `Image` manipulation. As web worker do not have
 `Image` API, this module fakes a `document` interface with only the `createDocument`
 method for you. So you could create a Image with no pain in worker:
 
-** Worker code **
+**Worker code**
 ```js
-var image = document.createDocument('img');
+var image = document.createElement('img');
 var image2 = new Image();
 ```
 

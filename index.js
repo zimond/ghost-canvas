@@ -1,7 +1,7 @@
-if ( typeof module !== 'undefined' && module.exports ) module.exports = function GhostCanvas() {
+if ( typeof module !== 'undefined' && module.exports ) module.exports = function GhostCanvas(callback) {
   // register document on web worker
   var inWorker = self.document === undefined
-  var post = self.post || self.postMessage
+  var post = callback || self.postMessage
   if (!self.document) self.document = self.window = {
     createElement: function(tagName) {
       if (tagName === 'canvas') return new GhostCanvas();
@@ -78,6 +78,7 @@ if ( typeof module !== 'undefined' && module.exports ) module.exports = function
 
   GhostCanvas.prototype.caller = function(fnName, args) {
     if (inWorker) {
+      args = args || []
       var attrs = {}, ctx = this.context
       for (var key in ctx) {
         if (ctx.hasOwnProperty(key) && key[0] !== '_' && key !== 'canvas') {
@@ -92,15 +93,7 @@ if ( typeof module !== 'undefined' && module.exports ) module.exports = function
         message.id = args.id;
         message.args = args.args;
       }
-      message.args = Array.prototype.slice.call(message.args);
-      // this._queue.push(message);
-      // this._operationCount++;
-      // if (this._operationCount < 10) return
-      // else {
-      //   self.post(this._queue);
-      //   this._operationCount = 0;
-      //   this._queue = [];
-      // }
+      message.args = Array.apply(null, message.args);
       self.post(message)
     }
   }
@@ -259,6 +252,7 @@ if ( typeof module !== 'undefined' && module.exports ) module.exports = function
     tmp._matrix = this._matrix;
     tmp._lineDash = this._lineDash;
     this._state.push(tmp);
+    this.canvas.caller('save');
   };
 
   GhostCanvasContext.prototype.restore = function() {
@@ -266,11 +260,13 @@ if ( typeof module !== 'undefined' && module.exports ) module.exports = function
     if (tmp) {
       for (var key in tmp) this[key] = tmp[key];
     }
+    this.canvas.caller('restore');
   };
 
-  ['drawFocusIfNeeded', 'measureText', 'isPointInPath', 'isPointInStroke'].forEach(function(key) {
+  ['drawFocusIfNeeded', 'isPointInPath', 'isPointInStroke'].forEach(function(key) {
     GhostCanvasContext.prototype[key] = function() {
       console.warn('The method', key, 'is not supported.');
     };
   });
+  // measureText not supported
 }

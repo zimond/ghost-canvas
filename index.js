@@ -94,7 +94,7 @@ if ( typeof module !== 'undefined' && module.exports ) module.exports = function
         message.args = args.args;
       }
       message.args = Array.apply(null, message.args);
-      self.post(message)
+      post(message)
     }
   }
 

@@ -1,6 +1,6 @@
 {
   "name": "ghost-canvas",
-  "version": "0.0.2-alpha1",
+  "version": "0.0.2-alpha3",
   "description": "Record canvas changes without actually rendering anything, based on jscapturecanvas",
   "main": "index.js",
   "scripts": {

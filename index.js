@@ -5,7 +5,7 @@ if ( typeof module !== 'undefined' && module.exports ) module.exports = function
   if (!self.document) self.document = self.window = {
     createElement: function(tagName) {
       if (tagName === 'canvas') return new GhostCanvas();
-      else if (tagName === 'image') return new GhostImage();
+      else if (tagName === 'img') return new GhostImage();
     }
   };
   self.CanvasRenderingContext2D = GhostCanvasContext;

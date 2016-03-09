@@ -10,13 +10,7 @@ if ( typeof module !== 'undefined' && module.exports ) module.exports = function
   };
   self.CanvasRenderingContext2D = GhostCanvasContext;
 
-  // event handlers
-  var handlers = {}, globalCounter = 0;
-  self.on = function(tag, eventName, cb) {
-    if (!handlers[tag]) handlers[tag] = {};
-    if (!handlers[tag][eventName]) handlers[tag][eventName] = [];
-    handlers[tag][eventName].push(cb);
-  };
+  var globalCounter = 0;
 
   function GhostImage() {
     var _src = null, that = this, _onload = null;
@@ -35,18 +29,16 @@ if ( typeof module !== 'undefined' && module.exports ) module.exports = function
       set: function(value) {
         _src = value;
         post({ type: 'set', id: that._id, tag: 'img', key: 'src', value: _src });
+        if (_onload) _onload()
       }
     });
     Object.defineProperty(this, 'onload', {
       get: function() { return _onload; },
       set: function(cb) {
-        if (_onload) self.off('imageonload', _onload);
-        self.on('imageonload', cb);
         _onload = cb;
       }
     });
     post({ type: 'create', id: that._id, tag: 'img' });
-    self.register(this._tag, 'onload', _onload);
   }
 
   function GhostImageData() {
@@ -58,15 +50,32 @@ if ( typeof module !== 'undefined' && module.exports ) module.exports = function
 
   function GhostCanvasFill() {
     this._id = globalCounter++;
+    this.colorStops = []
+  }
+
+  GhostCanvasFill.prototype.addColorStop = function(offset, color) {
+    this.colorStops.push(offset, color)
+  }
+
+  GhostCanvasFill.prototype.toJSON = function() {
+    var result = { id: this._id }
+    if (this.colorStops.length) result.colorStops = this.colorStops
+    return result
   }
 
   function GhostCanvas() {
     this.width = 0;
     this.height = 0;
-    this.id = null;
+    this.id = globalCounter++;
     this.childNodes = [];
     this._operationCount = 0;
-    this._queue = [];
+    post({ type: 'create', id: this._id, tag: 'canvas' });
+  }
+
+  GhostCanvas.prototype.toJSON = function() {
+    return {
+      id: this.id
+    }
   }
 
   GhostCanvas.prototype.getContext = function(key) {
@@ -83,7 +92,7 @@ if ( typeof module !== 'undefined' && module.exports ) module.exports = function
       for (var key in ctx) {
         if (ctx.hasOwnProperty(key) && key[0] !== '_' && key !== 'canvas') {
           if (ctx._lastTimeProps[key] !== ctx[key]) {
-            attrs[key] = (ctx[key] instanceof GhostCanvasFill ? { id: ctx[key].id } : ctx[key]);
+            attrs[key] = ctx[key]
             ctx._lastTimeProps[key] = attrs[key];
           }
         }
@@ -230,7 +239,7 @@ if ( typeof module !== 'undefined' && module.exports ) module.exports = function
     if (image._id) args.push({ id: image._id });
     else args.push(image);
     args.push(rep);
-    this.canvas.caller('createPattern', { args: arguments, id: result._id });
+    this.canvas.caller('createPattern', { args: args, id: result._id });
     return result;
   };
 

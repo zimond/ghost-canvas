@@ -196,7 +196,7 @@ if ( typeof module !== 'undefined' && module.exports ) module.exports = function
 
   GhostCanvasContext.prototype.drawImage = function(image) {
     // image should be a GhostImage instance
-    this.canvas.caller('drawImage', [image._id].concat(Array.prototype.slice.call(arguments, 1)));
+    this.canvas.caller('drawImage', [{ id: image._id }].concat(Array.prototype.slice.call(arguments, 1)));
   };
 
   GhostCanvasContext.prototype.setLineDash = function(segments) {

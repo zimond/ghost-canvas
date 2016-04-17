@@ -66,7 +66,7 @@ if ( typeof module !== 'undefined' && module.exports ) module.exports = function
   function GhostCanvas() {
     this.width = 0;
     this.height = 0;
-    this.id = globalCounter++;
+    this._id = this.id = globalCounter++;
     this.childNodes = [];
     this._operationCount = 0;
     post({ type: 'create', id: this._id, tag: 'canvas' });
@@ -74,7 +74,7 @@ if ( typeof module !== 'undefined' && module.exports ) module.exports = function
 
   GhostCanvas.prototype.toJSON = function() {
     return {
-      id: this.id
+      id: this._id
     }
   }
 
@@ -97,7 +97,7 @@ if ( typeof module !== 'undefined' && module.exports ) module.exports = function
           }
         }
       }
-      var message = { type: 'call', method: fnName, args: args, from: this.id, tag: 'canvas', attrs: attrs }
+      var message = { type: 'call', method: fnName, args: args, from: this._id, tag: 'canvas', attrs: attrs }
       if (args.args) {
         message.id = args.id;
         message.args = args.args;

@@ -115,7 +115,7 @@ if ( typeof module !== 'undefined' && module.exports ) module.exports = function
     // props
     this.canvas = ghostCanvas;
     this.direction = 'inherit';
-    this.fillStyle = '#000';
+    this.fillStyle = 'transparent';
     this.font = '10px sans-serif';
     this.globalAlpha = 1.0;
     this.globalCompositeOperation = null;
@@ -125,10 +125,10 @@ if ( typeof module !== 'undefined' && module.exports ) module.exports = function
     this.lineWidth = 1.0;
     this.miterLimit = 10;
     this.shadowBlur = 0;
-    this.shadowColor = 'black';
+    this.shadowColor = 'transparent';
     this.shadowOffsetX = 0;
     this.shadowOffsetY = 0;
-    this.strokeStyle = '#000';
+    this.strokeStyle = 'transparent';
     this.textAlign = 'start';
     this.textBaseline = 'alphabetic';
   }

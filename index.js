@@ -64,11 +64,26 @@ if ( typeof module !== 'undefined' && module.exports ) module.exports = function
   }
 
   function GhostCanvas() {
-    this.width = 0;
-    this.height = 0;
+    this._width = 0;
+    this._height = 0;
     this._id = this.id = globalCounter++;
     this.childNodes = [];
     this._operationCount = 0;
+    var that = this
+    Object.defineProperty(this, 'width', {
+      get: function() { return that._width; },
+      set: function(value) {
+        that._width = value
+        post({ type: 'set', id: that._id, tag: 'canvas', key: 'width', value: value });
+      }
+    });
+    Object.defineProperty(this, 'height', {
+      get: function() { return that._height; },
+      set: function(value) {
+        that._height = value
+        post({ type: 'set', id: that._id, tag: 'canvas', key: 'height', value: value });
+      }
+    });
     post({ type: 'create', id: this._id, tag: 'canvas' });
   }
 
@@ -115,7 +130,7 @@ if ( typeof module !== 'undefined' && module.exports ) module.exports = function
     // props
     this.canvas = ghostCanvas;
     this.direction = 'inherit';
-    this.fillStyle = 'transparent';
+    this.fillStyle = '#000';
     this.font = '10px sans-serif';
     this.globalAlpha = 1.0;
     this.globalCompositeOperation = null;
@@ -125,10 +140,10 @@ if ( typeof module !== 'undefined' && module.exports ) module.exports = function
     this.lineWidth = 1.0;
     this.miterLimit = 10;
     this.shadowBlur = 0;
-    this.shadowColor = 'transparent';
+    this.shadowColor = '#000';
     this.shadowOffsetX = 0;
     this.shadowOffsetY = 0;
-    this.strokeStyle = 'transparent';
+    this.strokeStyle = '#000';
     this.textAlign = 'start';
     this.textBaseline = 'alphabetic';
   }
